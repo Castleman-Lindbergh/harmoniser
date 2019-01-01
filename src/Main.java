@@ -27,25 +27,41 @@ public class Main {
 		
 		// create new PSOLA object for pitch shifting
 		PSOLA psola = new PSOLA(BUFFER_SIZE, SAMPLE_RATE);
+		
+		float[] targetFrequencies = {233.08f, 293.66f, 349.23f, 440.0f};
 
 		// setup new PitchDetection handler
 		PitchDetectionHandler handler = new PitchDetectionHandler() {
 	        @Override
 	        public void handlePitch(PitchDetectionResult result, AudioEvent audioEvent) {
 	        	// if pitch detected
-	        	if (result.getPitch() != -1) {
+	        	if (result.getPitch() != -1) {	        		
 	        		// analyze mic audio using pitch estimate
 	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
-	
-	        		// generate shifted audio buffer
-	        		float[] shifted = psola.shift(440);
 	        		
-	        		// replace audio with shifted signal
-	        		audioEvent.setFloatBuffer(shifted);
+	        		float[] avgOut = new float[BUFFER_SIZE], shifted;
+	        		
+	        		// calculate each pitch shifted buffer, adding to average
+	        		for (int i = 0; i < targetFrequencies.length; i++) {
+	        			shifted = psola.shift(targetFrequencies[i]);
+	        			
+	        			// add to average buffer
+	        			for (int j = 0; j < shifted.length; j++) {
+	        				avgOut[j] += shifted[j];
+	        			}
+	        		}
+	        		
+	        		// finalize average by dividing by number of separate frequencies
+	        		for (int i = 0; i < avgOut.length; i++) {
+	        			avgOut[i] /= targetFrequencies.length;
+	        		}
+	        		
+	        		// replace audio with synthesized signal
+	        		audioEvent.setFloatBuffer(avgOut);
 	        		
 	        	// if no pitch detected
 	        	} else {
-	        		// do not play audio if no pitch detected
+	        		// do not playback any audio
 	        		audioEvent.clearFloatBuffer();
 	        	}
 	        }
