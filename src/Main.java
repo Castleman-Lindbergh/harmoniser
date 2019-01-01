@@ -18,7 +18,7 @@ public class Main {
 
 	public static void main(String[] args) throws LineUnavailableException {		
 		int BUFFER_SIZE = 1024;
-		float SAMPLE_RATE = 44100;
+		int SAMPLE_RATE = 44100;
 		
 		// set up audio stream from default mic
 		AudioDispatcher d = AudioDispatcherFactory.fromDefaultMicrophone(BUFFER_SIZE, 0);
@@ -26,21 +26,23 @@ public class Main {
 		// remove any frequencies below 110 Hz
 		d.addAudioProcessor(new HighPass(110, SAMPLE_RATE));
 		
+		// create new PSOLA object for pitch shifting
+		PSOLA psola = new PSOLA(BUFFER_SIZE, SAMPLE_RATE);
+		
 		// setup new PitchDetection handler
 		PitchDetectionHandler handler = new PitchDetectionHandler() {
 	        @Override
 	        public void handlePitch(PitchDetectionResult result, AudioEvent audioEvent) {
 	        	// if pitch detected
 	        	if (result.getPitch() != -1) {
-	        		
-	        		System.out.println(result.getPitch());
-	        		
-	        		float[] buffer = audioEvent.getFloatBuffer();
-	        		
-	        		for (int i = 0; i < buffer.length; i++) {
-	        			System.out.print(buffer[i] + ", ");
-	        		}
-	        		System.out.println();
+//	        		// analyze mic audio using pitch estimate
+//	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
+//	        		
+//	        		// generate shifted audio buffer
+//	        		float[] shifted = psola.shift(440);
+//	        		
+//	        		// replace audio with shifted signal
+//	        		audioEvent.setFloatBuffer(shifted);
 	        		
 	        	// if no pitch detected
 	        	} else {
@@ -61,7 +63,3 @@ public class Main {
 	}
 
 }
-
-
-
-
