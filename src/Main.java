@@ -35,9 +35,16 @@ public class Main {
 	        public void handlePitch(PitchDetectionResult result, AudioEvent audioEvent) {
 	        	// if pitch detected
 	        	if (result.getPitch() != -1) {
-//	        		// analyze mic audio using pitch estimate
-//	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
-//	        		
+	        		// analyze mic audio using pitch estimate
+	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
+	        		
+//	        		float[] buffer = audioEvent.getFloatBuffer();
+//	        		for (int i = 0; i < buffer.length; i++) {
+//	        			System.out.print(buffer[i] + ", ");
+//	        		}
+//	        		System.out.println();
+	        		
+	        		
 //	        		// generate shifted audio buffer
 //	        		float[] shifted = psola.shift(440);
 //	        		

@@ -63,6 +63,25 @@ public class PSOLA {
 	// generate a buffer shifted to a given frequency
 	public float[] shift(float targetFrequency) {
 		
+		
+		
+		
+		return new float[0];
+	}
+	
+	// calculate positions of synthesis peaks for a given frequency
+	private ArrayList<Integer> getSynthesisPeaks(float targetFrequency) {
+
+	}
+	
+	// generate a mapping of synthesis peaks to analysis peaks (using closest analysis peak)
+	private int[] getMapping(ArrayList<Integer> synthesisPeaks) {
+		
+	}
+	
+	// overlap and add together synthesis windows, resulting in new output buffer
+	private float[] overlapAndAdd(ArrayList<Integer> synthesisPeaks, int[] mapping, int halfWindow) {
+		
 	}
 
 }
