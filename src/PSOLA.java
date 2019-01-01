@@ -68,10 +68,32 @@ public class PSOLA {
 		
 		return new float[0];
 	}
-	
-	// calculate positions of synthesis peaks for a given frequency
-	private ArrayList<Integer> getSynthesisPeaks(float targetFrequency) {
 
+	// calculate positions of synthesis peaks for a given frequency (assumes analysis peaks exist)
+	private ArrayList<Integer> getSynthesisPeaks(float targetFrequency) {
+		// calculate sample period of target frequency
+		int targetPeriod = (int) Math.floor(this.SAMPLE_RATE / targetFrequency);
+		
+		// align initial peaks of synthesis and analysis
+		int initialPeak = this.analysisPeaks.get(0);
+		
+		// if an earlier initial synthesis peak is possible, use this (prevents peaks from starting late in buffer)
+		while (initialPeak - targetPeriod > 0) {
+			initialPeak -= targetPeriod;
+		}
+		
+		// create empty array of synthesis peaks
+		ArrayList<Integer> synthPeaks = new ArrayList<Integer>();
+		
+		// determine number of synthesis peaks that can fit into this buffer
+		int numPeaks = (this.BUFFER_SIZE - initialPeak) / targetPeriod + 1;
+		
+		// calculate and add each peak using multiples of the target period
+		for (int i = 0; i < numPeaks; i++) {
+			synthPeaks.add(initialPeak + (i * targetPeriod));
+		}
+		
+		return synthPeaks;
 	}
 	
 	// generate a mapping of synthesis peaks to analysis peaks (using closest analysis peak)
