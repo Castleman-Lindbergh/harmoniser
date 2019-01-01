@@ -1,13 +1,10 @@
 
 // DOCS: https://0110.be/releases/TarsosDSP/TarsosDSP-latest/TarsosDSP-latest-Documentation/
 
-import java.util.ArrayList;
-
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
-import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.filters.HighPass;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.io.jvm.AudioPlayer;
@@ -19,7 +16,7 @@ import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 public class Main {
 
 	public static void main(String[] args) throws LineUnavailableException {		
-		int BUFFER_SIZE = 1024;
+		int BUFFER_SIZE = 8192; // 1024;
 		int SAMPLE_RATE = 44100;
 		
 		// set up audio stream from default mic
@@ -37,23 +34,14 @@ public class Main {
 	        public void handlePitch(PitchDetectionResult result, AudioEvent audioEvent) {
 	        	// if pitch detected
 	        	if (result.getPitch() != -1) {
+	        		// analyze mic audio using pitch estimate
+	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
+	
+	        		// generate shifted audio buffer
+	        		float[] shifted = psola.shift(440);
 	        		
-//	        		// analyze mic audio using pitch estimate
-//	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
-
-
-//	        		float[] buffer = audioEvent.getFloatBuffer();
-//	        		for (int i = 0; i < buffer.length; i++) {
-//	        			System.out.print(buffer[i] + ", ");
-//	        		}
-//	        		System.out.println();
-	        		
-	        		
-//	        		// generate shifted audio buffer
-//	        		float[] shifted = psola.shift(440);
-//	        		
-//	        		// replace audio with shifted signal
-//	        		audioEvent.setFloatBuffer(shifted);
+	        		// replace audio with shifted signal
+	        		audioEvent.setFloatBuffer(shifted);
 	        		
 	        	// if no pitch detected
 	        	} else {
