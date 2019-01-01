@@ -62,10 +62,6 @@ public class PSOLA {
 	
 	// generate a buffer shifted to a given frequency
 	public float[] shift(float targetFrequency) {
-		
-		
-		
-		
 		return new float[0];
 	}
 
@@ -98,7 +94,41 @@ public class PSOLA {
 	
 	// generate a mapping of synthesis peaks to analysis peaks (using closest analysis peak)
 	private int[] getMapping(ArrayList<Integer> synthesisPeaks) {
+		// initialize mapping as empty array, with one spot per synthesis peak
+		int[] mapping = new int[synthesisPeaks.size()];
 		
+		// record the previous closest peak each time to use as a starting point for next peak's search
+		int previousClosest = 0, closest;
+		
+		// for each synthesis peak
+		for (int s = 0; s < synthesisPeaks.size(); s++) {
+			int synth = synthesisPeaks.get(s);
+			
+			closest = previousClosest;	// assume closest parent peak is same as closest peak for previous synthesis peak
+			
+			// for each possible parent peak, starting at last closest
+			for (int p = previousClosest; p < this.analysisPeaks.size(); p++) {
+				int analysisPeak = this.analysisPeaks.get(p);
+				
+				// if this parent is closer than current closest, replace
+				if (Math.abs(analysisPeak - synth) < Math.abs(this.analysisPeaks.get(closest) - synth)) {
+					closest = p;
+				}
+				
+				// if at or past child synthesis peak, look no further for parent (distance only increases)
+				if (analysisPeak >= synth) {
+					break;
+				}
+			}
+			
+			// set this synthesis peak's parent as the closest analysis peak
+			mapping[s] = closest;
+			
+			// update this closest peak so next iteration will start from here
+			previousClosest = closest;
+		}
+		
+		return mapping;
 	}
 	
 	// overlap and add together synthesis windows, resulting in new output buffer
