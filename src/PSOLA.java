@@ -133,7 +133,44 @@ public class PSOLA {
 	
 	// overlap and add together synthesis windows, resulting in new output buffer
 	private float[] overlapAndAdd(ArrayList<Integer> synthesisPeaks, int[] mapping, int halfWindow) {
+		// initialize output buffer as zeroed array of same size as buffer
+		float[] out = new float[this.BUFFER_SIZE];
 		
+		// precompute array of Hann window coefficients
+		float[] Hann = new float[2 * halfWindow];
+		for (int i = -halfWindow; i < halfWindow; i++) {
+			Hann[i + halfWindow] = H(i, halfWindow);
+		}
+		
+		int cMid, pMid, c, p;
+		
+		// for each synthesis peak
+		for (int s = 0; s < synthesisPeaks.size(); s++) {
+			// get midpoint indices of child (synthesis) and parent (analysis) peaks
+			cMid = synthesisPeaks.get(s);
+			pMid = this.analysisPeaks.get(mapping[s]);
+			
+			// for each possible window shift
+			for (int shift = -halfWindow; shift < halfWindow; shift++) {
+				// calculate shifted indices for child and parent
+				c = cMid + shift;
+				p = pMid + shift;
+				
+				// if both indices in bounds in buffer
+				if (c > 0 && p > 0 && c < this.BUFFER_SIZE && p < this.BUFFER_SIZE) {
+					// add weighted sample from parent window to child window
+					out[c] += Hann[shift + halfWindow] * this.buffer[p];
+				}
+			}
+		}
+		
+		return out;
+	}
+	
+	// the Hann window function, where n is current shift in window, w is half of window size
+	// (domain for n is -w to w)
+	private float H(int n, int w) {
+		return (float) (0.5 * (1 - Math.cos((2 * Math.PI * (n + w)) / (2 * w))));
 	}
 
 }
