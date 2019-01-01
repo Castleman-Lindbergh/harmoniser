@@ -62,7 +62,20 @@ public class PSOLA {
 	
 	// generate a buffer shifted to a given frequency
 	public float[] shift(float targetFrequency) {
-		return new float[0];
+		// if analysis was successfull, proceed
+		if (this.analysisPeaks.size() > 0) {
+			// find synthesis peaks for desired frequency
+			ArrayList<Integer> synthesisPeaks = this.getSynthesisPeaks(targetFrequency);
+			
+			// determine mapping of synthesis to analysis
+			int[] mapping = this.getMapping(synthesisPeaks);
+			
+			// calculate output buffer by overlap adding synthesis peaks with given mapping (use window size = 2 * pitch period)
+			return this.overlapAndAdd(synthesisPeaks, mapping, this.pitchPeriod);
+		} else {
+			// fallback: return unchanged buffer
+			return this.buffer;
+		}
 	}
 
 	// calculate positions of synthesis peaks for a given frequency (assumes analysis peaks exist)
