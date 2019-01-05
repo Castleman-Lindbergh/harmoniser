@@ -1,6 +1,8 @@
 
 // DOCS: https://0110.be/releases/TarsosDSP/TarsosDSP-latest/TarsosDSP-latest-Documentation/
 
+import java.util.ArrayList;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import be.tarsos.dsp.AudioDispatcher;
@@ -14,15 +16,15 @@ import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 
 public class Main {
-	
+
 	// MIDI keyboard parameters
 	public static final int MIN_PITCH = 21, MAX_PITCH = 108; // MIN_PITCH = 48, MAX_PITCH = 84;
 	
 	// frequencies coming from MIDI instrument
-	public static float[] targetFrequencies;
+	public static ArrayList<Float> targetFrequencies;
 
 	public static void main(String[] args) throws LineUnavailableException {		
-		int BUFFER_SIZE = 8192; // 1024;
+		int BUFFER_SIZE = 8192;
 		int SAMPLE_RATE = 44100;
 
 		// set up MIDI handlers
@@ -38,47 +40,43 @@ public class Main {
 		
 		// create new PSOLA object for pitch shifting
 		PSOLA psola = new PSOLA(BUFFER_SIZE, SAMPLE_RATE);
-		
-		// float[] targetFrequencies; //  = {233.08f, 293.66f, 349.23f, 440.0f};
 
 		// setup new PitchDetection handler
 		PitchDetectionHandler handler = new PitchDetectionHandler() {
 	        @Override
 	        public void handlePitch(PitchDetectionResult result, AudioEvent audioEvent) {
-	        	// if pitch detected
+	        	// if pitch detected, attempt pitch shifts
 	        	if (result.getPitch() != -1) {	        		
 	        		// analyze mic audio using pitch estimate
 	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
 	        		
+	        		// allocate array to hold averaged result of shifted waves
 	        		float[] avgOut = new float[BUFFER_SIZE], shifted;
 	        		
 	        		// get frequencies being played on keyboard
 	        		targetFrequencies = noteHandler.getFrequencies();
 	        		
 	        		// calculate each pitch shifted buffer, adding to average
-	        		for (int i = 0; i < targetFrequencies.length; i++) {
-	        			if (targetFrequencies[i] > 0) {
-		        			shifted = psola.shift(targetFrequencies[i]);
-		        			
-		        			// add to average buffer
-		        			for (int j = 0; j < shifted.length; j++) {
-		        				avgOut[j] += shifted[j];
-		        			}
+	        		for (int i = 0; i < targetFrequencies.size(); i++) {
+	        			// get shifted signal
+	        			shifted = psola.shift(targetFrequencies.get(i));
+	        			
+	        			// add to average buffer
+	        			for (int j = 0; j < shifted.length; j++) {
+	        				avgOut[j] += shifted[j];
 	        			}
 	        		}
 	        		
+	        		// store total number of separate signals in output
+	        		int numSignals = targetFrequencies.size();
+	        		
 	        		// finalize average by dividing by number of separate frequencies
 	        		for (int i = 0; i < avgOut.length; i++) {
-	        			avgOut[i] /= targetFrequencies.length;
+	        			avgOut[i] /= numSignals;
 	        		}
 	        		
-	        		// replace audio with synthesized signal
+	        		// replace audio with averaged signal
 	        		audioEvent.setFloatBuffer(avgOut);
-	        		
-	        	// if no pitch detected
-	        	} else {
-	        		// do not playback any audio
-	        		audioEvent.clearFloatBuffer();
 	        	}
 	        }
 	    };
