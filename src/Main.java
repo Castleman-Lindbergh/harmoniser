@@ -18,13 +18,13 @@ import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 public class Main {
 
 	// MIDI keyboard parameters
-	public static final int MIN_PITCH = 21, MAX_PITCH = 108; // MIN_PITCH = 48, MAX_PITCH = 84;
+	public static final int MIN_PITCH = 48, MAX_PITCH = 84; // MIN_PITCH = 21, MAX_PITCH = 108;
 	
 	// frequencies coming from MIDI instrument
 	public static ArrayList<Float> targetFrequencies;
 
 	public static void main(String[] args) throws LineUnavailableException {		
-		int BUFFER_SIZE = 8192;
+		int BUFFER_SIZE = 4096; // 8192;
 		int SAMPLE_RATE = 44100;
 
 		// set up MIDI handlers
@@ -46,20 +46,20 @@ public class Main {
 	        @Override
 	        public void handlePitch(PitchDetectionResult result, AudioEvent audioEvent) {
 	        	// if pitch detected, attempt pitch shifts
-	        	if (result.getPitch() != -1) {	        		
-	        		// analyze mic audio using pitch estimate
-	        		psola.analyze(audioEvent.getFloatBuffer(), result.getPitch());
+	        	if (result.getPitch() != -1) {
+	        		// allocate several float arrays
+	        		float[] audioIn = audioEvent.getFloatBuffer(), avgOut = new float[BUFFER_SIZE], shifted;
 	        		
-	        		// allocate array to hold averaged result of shifted waves
-	        		float[] avgOut = new float[BUFFER_SIZE], shifted;
+	        		// analyze mic audio using pitch estimate
+	        		psola.analyze(audioIn, result.getPitch());
 	        		
 	        		// get frequencies being played on keyboard
 	        		targetFrequencies = noteHandler.getFrequencies();
 	        		
 	        		// calculate each pitch shifted buffer, adding to average
-	        		for (int i = 0; i < targetFrequencies.size(); i++) {
-	        			// get shifted signal
-	        			shifted = psola.shift(targetFrequencies.get(i));
+	        		for (int i = -1; i < targetFrequencies.size(); i++) {
+	        			// get shifted signal (first iteration gets the input audio)
+	        			shifted = i == -1 ? audioIn : psola.shift(targetFrequencies.get(i));
 	        			
 	        			// add to average buffer
 	        			for (int j = 0; j < shifted.length; j++) {
@@ -67,8 +67,8 @@ public class Main {
 	        			}
 	        		}
 	        		
-	        		// store total number of separate signals in output
-	        		int numSignals = targetFrequencies.size();
+	        		// store total number of separate signals in output (+1 for added input audio)
+	        		int numSignals = targetFrequencies.size() + 1;
 	        		
 	        		// finalize average by dividing by number of separate frequencies
 	        		for (int i = 0; i < avgOut.length; i++) {
