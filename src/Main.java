@@ -16,7 +16,7 @@ import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 public class Main {
 	
 	// MIDI keyboard parameters
-	public static final int MIN_PITCH = 48, MAX_PITCH = 84;
+	public static final int MIN_PITCH = 21, MAX_PITCH = 108; // MIN_PITCH = 48, MAX_PITCH = 84;
 	
 	// frequencies coming from MIDI instrument
 	public static float[] targetFrequencies;
@@ -24,15 +24,15 @@ public class Main {
 	public static void main(String[] args) throws LineUnavailableException {		
 		int BUFFER_SIZE = 8192; // 1024;
 		int SAMPLE_RATE = 44100;
-		
+
 		// set up MIDI handlers
 		NoteHandler noteHandler = new NoteHandler(MIN_PITCH, MAX_PITCH);
 		MidiBus.list();
 		MidiBus bus = new MidiBus(noteHandler, 0, 1);
-		
+
 		// set up audio stream from default mic
 		AudioDispatcher d = AudioDispatcherFactory.fromDefaultMicrophone(BUFFER_SIZE, 0);
-		
+
 		// remove any frequencies below 110 Hz
 		d.addAudioProcessor(new HighPass(110, SAMPLE_RATE));
 		
