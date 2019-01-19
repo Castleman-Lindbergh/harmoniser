@@ -24,7 +24,7 @@ public class Main {
 	public static ArrayList<Float> targetFrequencies;
 
 	public static void main(String[] args) throws LineUnavailableException {		
-		int BUFFER_SIZE = 4096; // 8192;
+		int BUFFER_SIZE = 8192;
 		int SAMPLE_RATE = 44100;
 
 		// set up MIDI handlers
@@ -63,7 +63,8 @@ public class Main {
 	        			
 	        			// add to average buffer
 	        			for (int j = 0; j < shifted.length; j++) {
-	        				avgOut[j] += shifted[j];
+	        				// (scale down original audio)
+	        				avgOut[j] += shifted[j] * (i == -1 ? 0.5 : 1);
 	        			}
 	        		}
 	        		
